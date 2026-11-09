@@ -11,7 +11,7 @@
 - **Maxime Brière**
 
 - **Project Repository:** [https://github.com/Singyu514/esp32-breathing-monitor](https://github.com/Singyu514/esp32-breathing-monitor)
-- **Live BLE Monitoring Station (GitHub Pages):** [https://singyu514.github.io/esp32-breathing-monitor/](https://singyu514.github.io/esp32-breathing-monitor/) *(Deployment in progress)*
+- **Live BLE Monitoring Station (GitHub Pages):** [https://singyu514.github.io/esp32-breathing-monitor/](https://singyu514.github.io/esp32-breathing-monitor/)
 
 ---
 
@@ -34,7 +34,7 @@ The device autonomously classifies 4 distinct physical and respiratory states di
 ### Components:
 - **Microcontroller:** ESP32-S3 N16R8 DevKit
 - **Sensor:** MPU-6050 (GY-521) 3-axis Accelerometer + 3-axis Gyroscope
-- **Indicator:** On-board addressable RGB LED (WS2812 / NeoPixel)
+- **Indicator:** On-board addressable RGB LED (WS2812 / NeoPixel on GPIO 48)
 - **Connections:** Breadboard & jumper wires, powered via USB cable
 
 ### Pinout (I2C):
@@ -42,13 +42,15 @@ The device autonomously classifies 4 distinct physical and respiratory states di
 | :--- | :--- | :--- |
 | **VCC** | `3V3` / `5V` | Power supply |
 | **GND** | `GND` | Ground |
-| **SCL** | `GPIO 9` *(default)* | I2C Clock |
-| **SDA** | `GPIO 8` *(default)* | I2C Data |
+| **SCL** | `GPIO 9` | I2C Clock |
+| **SDA** | `GPIO 8` | I2C Data |
 | **AD0** | `GND` | I2C address selection (`0x68`) |
 
 ### Hardware Wiring Photo
 
-<img src="docs/wiring.jpg" alt="ESP32-S3 and MPU-6050 Wiring" width="350">
+<img src="docs/wiring.jpg" alt="ESP32-S3 and MPU-6050 Wiring" width="400">
+
+*Figure 1: ESP32-S3 N16R8 connected to the MPU-6050 IMU on breadboard.*
 ---
 
 ## 📊 Project Progress & Grading Milestones
@@ -56,28 +58,28 @@ The device autonomously classifies 4 distinct physical and respiratory states di
 - [x] **Repository & Project Setup** (Compulsory)
   - [x] Git repository created on branch `main`
   - [x] README and structure initialized
-  - [ ] Shared with teacher (`tomasvicar`)
+  - [x] Shared with teacher (`tomasvicar`)
 - [x] **Part 1: Movement vs. Shaking (2.5 pts)** - *Validated by teacher*
   - [x] Omnidirectional sensor reading over I2C (SDA: 8, SCL: 9) at 50 Hz
   - [x] Rolling window differential energy metric (`d_acc + 0.5 * d_gyr`)
   - [x] Real-time RGB LED feedback (Blue = Slow movement / Still, Magenta = Shaking)
-- [x] **Part 2: Breathing Classification (2.5 pts)** - *Validated on board (98% accuracy)*
+- [x] **Part 2: Breathing Classification (2.5 pts)** - *Validated by teacher*
   - [x] Data collection across 16 sessions (calm, fast, lying still, moving in hand, shaking)
   - [x] Feature extraction: 6 spatial & dynamic IMU metrics with rotation awareness
   - [x] Embedded C++ Random Forest inference (8 trees, depth 5) + rolling majority smoothing filter
   - [x] Real-time RGB LED feedback: Green (calm), Red (fast), Blue (not attached), Magenta (shaking)
-- [x] **Part 3: BLE Bedside Monitor (1.5 pts)** - *Ready & deployed*
+- [x] **Part 3: BLE Bedside Monitor (1.5 pts)** - *Validated by teacher*
   - [x] BLE GATT Service & State Characteristic notification on ESP32-S3 (`ESP32_Breathing_Monitor`)
   - [x] Web Bluetooth monitoring dashboard on GitHub Pages (full English clinical UI)
   - [x] Real-time state timeline visualization
   - [x] Configurable duration alarms (Tachypnea > 8s, Detached > 10s) with audio beeper
   - [x] Instantaneous connection-lost alarm with critical siren
-- [x] **Part 4: Web Page from the Board (1.0 pt)** - *Ready to show*
+- [x] **Part 4: Web Page from the Board (1.0 pt)** - *Validated by teacher*
   - [x] ESP32-S3 Wi-Fi SoftAP hotspot (`ESP32_Breathing_Monitor`)
   - [x] Standalone HTTP web server running on chip (`http://192.168.4.1`)
   - [x] Live acceleration signal waveform oscilloscope (pure Canvas, zero external dependencies)
   - [x] Real-time prediction state badge and all 4 class probability confidence bars
-- [x] **Part 5: Own Extension (1.5 pts)** - *Completed & demonstrated*
+- [x] **Part 5: Own Extension (1.5 pts)** - *Validated by teacher*
   - [x] Medical sleep position classifier: Supine (Back), Prone (Stomach), Left Lateral, Right Lateral, Upright
   - [x] Low-pass gravitational vector isolation ($\alpha = 0.05$)
   - [x] Overnight event logger ("Log of the Night") storing transitions with timestamps & durations
@@ -141,8 +143,33 @@ In compliance with Brno University of Technology (BUT) guidelines:
 - Python 3.10+ (for model training: `numpy`, `scipy`, `scikit-learn`, `matplotlib`, `pandas`)
 - Chrome / Edge with Web Bluetooth enabled (for BLE bedside monitor)
 
-### 2. Microcontroller Firmware
-1. Open the project firmware in Arduino IDE or VS Code PlatformIO.
-2. Select board **ESP32S3 Dev Module** with appropriate partition scheme and USB CDC on boot enabled.
-3. Flash the firmware onto the ESP32-S3.
-4. Unplug and replug or power via standalone USB power supply.
+### 3. Model Training & Evaluation
+To record new data and retrain the classifier:
+```bash
+# 1. Flash firmware/data_logger/data_logger.ino to ESP32-S3
+# 2. Record labeled sessions (50 Hz IMU stream)
+python ml/record_data.py
+
+# 3. Extract features, evaluate on unseen sessions, and export C header
+python ml/train_model.py
+```
+
+#### Evaluation Metrics on Unseen Test Sessions:
+```text
+                precision    recall  f1-score   support
+
+calm_breathing       0.99      1.00      1.00       104
+fast_breathing       0.93      0.99      0.96       104
+  not_attached       1.00      0.92      0.96       104
+       shaking       1.00      1.00      1.00       104
+
+      accuracy                           0.98       416
+```
+
+### 4. Available Microcontroller Sketches
+All sketches are located in `firmware/` and can be built directly in Arduino IDE:
+- `firmware/movement_vs_shaking/`: Part 1 standalone baseline (Blue vs Magenta).
+- `firmware/breathing_monitor/`: Part 2 4-class autonomous monitor (RGB LED output).
+- `firmware/ble_breathing_monitor/`: Part 3 BLE GATT server broadcasting states to Web Bluetooth dashboard.
+- `firmware/wifi_web_monitor/`: Part 4 autonomous SoftAP HTTP server (`http://192.168.4.1`) with live Canvas waveform and class probabilities.
+- `firmware/sleep_position_monitor/`: Part 5 own extension with 3D gravitational projection, Night Log, and POSA alert.

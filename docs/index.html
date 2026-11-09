@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Station de Surveillance Respiratoire - ESP32-S3</title>
+  <title>Patient Bedside Monitoring Station - ESP32-S3</title>
   <style>
     :root {
       --bg-color: #0b0f19;
@@ -11,9 +11,9 @@
       --card-border: #232f48;
       --text-color: #e2e8f0;
       --text-muted: #94a3b8;
-      --color-calm: #10b981;      /* Vert */
-      --color-fast: #ef4444;      /* Rouge */
-      --color-detached: #3b82f6;  /* Bleu */
+      --color-calm: #10b981;      /* Green */
+      --color-fast: #ef4444;      /* Red */
+      --color-detached: #3b82f6;  /* Blue */
       --color-shaking: #d946ef;   /* Magenta */
       --color-alarm: #dc2626;
     }
@@ -73,12 +73,12 @@
 
   <header>
     <div>
-      <h1>🫁 Moniteur de Surveillance Patient <span class="badge">ESP32-S3 BLE</span></h1>
-      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">Laboratoire IA Temps Réel (MPA-PRM) - Sing-Yu Lin & Maxime Brière</p>
+      <h1>🫁 Bedside Patient Monitoring Station <span class="badge">ESP32-S3 BLE</span></h1>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">Real-time AI Lab (MPA-PRM) - Sing-Yu Lin & Maxime Brière</p>
     </div>
     <div style="display: flex; gap: 0.8rem; align-items: center;">
-      <span id="connStatus" style="color: var(--text-muted); font-size: 0.9rem;">● Déconnecté</span>
-      <button id="btnConnect" class="btn" onclick="toggleConnect()">🔗 Connecter le moniteur</button>
+      <span id="connStatus" style="color: var(--text-muted); font-size: 0.9rem;">● Disconnected</span>
+      <button id="btnConnect" class="btn" onclick="toggleConnect()">🔗 Connect Monitor</button>
     </div>
   </header>
 
@@ -86,54 +86,54 @@
   <div id="alarmBanner" class="alarm-banner">
     <div style="display: flex; align-items: center; gap: 0.8rem;">
       <span style="font-size: 1.5rem;">🚨</span>
-      <span id="alarmText">ALERTE DÉCLENCHÉE</span>
+      <span id="alarmText">ALARM TRIGGERED</span>
     </div>
-    <button class="btn btn-danger" onclick="silenceAlarm()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Arrêter l'alarme sonore</button>
+    <button class="btn btn-danger" onclick="silenceAlarm()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Silence Alarm</button>
   </div>
 
   <div class="grid">
     <!-- Card 1: Live State -->
     <div class="card">
-      <div class="card-title">État Actuel du Patient</div>
+      <div class="card-title">Current Patient State</div>
       <div id="stateBox" class="state-box">
-        <div id="stateLabel" class="state-name">EN ATTENTE</div>
-        <div id="stateDuration" class="state-duration">Connectez la carte en Bluetooth</div>
+        <div id="stateLabel" class="state-name">STANDBY</div>
+        <div id="stateDuration" class="state-duration">Connect device via Web Bluetooth</div>
       </div>
       <div style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">
-        Fréquence de notification : temps réel via Bluetooth Low Energy (GATT)
+        Notification channel: Bluetooth Low Energy GATT Characteristic (real-time)
       </div>
     </div>
 
     <!-- Card 2: Alarm Limits & Settings -->
     <div class="card">
-      <div class="card-title">Paramètres des Seuils d'Alarme (Clinique)</div>
+      <div class="card-title">Clinical Alarm Thresholds</div>
       <div class="limits-box">
         <div class="limits-row">
-          <span>⚠️ <strong>Alarme Respiration Rapide (Tachypnée)</strong> :</span>
+          <span>⚠️ <strong>Fast Breathing Alarm (Tachypnea)</strong>:</span>
           <div>
-            <input type="number" id="limitFast" value="8" min="3" max="60"> secondes
+            <input type="number" id="limitFast" value="8" min="3" max="60"> seconds
           </div>
         </div>
         <div style="font-size: 0.8rem; color: var(--text-muted);">
-          Indique une détresse respiratoire ou crise d'hyperventilation persistante.
+          Alerts on sustained rapid respiration indicative of acute respiratory distress.
         </div>
         <hr style="border: 0; border-top: 1px solid var(--card-border);">
         <div class="limits-row">
-          <span>⚠️ <strong>Alarme Capteur Détaché</strong> :</span>
+          <span>⚠️ <strong>Sensor Not Attached Alarm</strong>:</span>
           <div>
-            <input type="number" id="limitDetached" value="10" min="3" max="60"> secondes
+            <input type="number" id="limitDetached" value="10" min="3" max="60"> seconds
           </div>
         </div>
         <div style="font-size: 0.8rem; color: var(--text-muted);">
-          Alerte si le capteur est retiré du thorax du patient plus de 10s.
+          Alerts if sensor is off chest (held in hand or placed on table) for more than 10s.
         </div>
         <hr style="border: 0; border-top: 1px solid var(--card-border);">
         <div class="limits-row">
-          <span>🚨 <strong>Alarme Perte de Connexion BLE</strong> :</span>
-          <span style="color: #ef4444; font-weight: 600;">Instantanée</span>
+          <span>🚨 <strong>Lost BLE Connection Alarm</strong>:</span>
+          <span style="color: #ef4444; font-weight: 600;">Instantaneous</span>
         </div>
         <div style="font-size: 0.8rem; color: var(--text-muted);">
-          Alerte immédiate en cas de rupture du signal radio Bluetooth.
+          Immediate critical alert when the Bluetooth radio link drops or board powers off.
         </div>
       </div>
     </div>
@@ -142,17 +142,17 @@
   <!-- Card 3: Timeline -->
   <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-      <div class="card-title">Chronologie des États (Historique en direct)</div>
-      <span style="font-size: 0.8rem; color: var(--text-muted);">Défilement continu</span>
+      <div class="card-title">State Timeline (Live History)</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Continuous scrolling</span>
     </div>
 
     <div id="timeline" class="timeline-container"></div>
 
     <div class="timeline-legend">
-      <div class="legend-item"><div class="legend-dot" style="background: var(--color-calm);"></div> Respiration Calme</div>
-      <div class="legend-item"><div class="legend-dot" style="background: var(--color-fast);"></div> Respiration Rapide</div>
-      <div class="legend-item"><div class="legend-dot" style="background: var(--color-detached);"></div> Non Attaché / En main</div>
-      <div class="legend-item"><div class="legend-dot" style="background: var(--color-shaking);"></div> Secouement</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-calm);"></div> Calm Breathing</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-fast);"></div> Fast Breathing</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-detached);"></div> Not Attached / In Hand</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-shaking);"></div> Shaking</div>
     </div>
   </div>
 
@@ -217,7 +217,7 @@
       }
 
       try {
-        document.getElementById('connStatus').innerText = 'Recherche...';
+        document.getElementById('connStatus').innerText = 'Scanning...';
         bluetoothDevice = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
           optionalServices: [SERVICE_UUID]
@@ -225,7 +225,7 @@
 
         bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
-        document.getElementById('connStatus').innerText = 'Connexion GATT...';
+        document.getElementById('connStatus').innerText = 'Connecting GATT...';
         const server = await bluetoothDevice.gatt.connect();
 
         const service = await server.getPrimaryService(SERVICE_UUID);
@@ -234,22 +234,22 @@
         await stateCharacteristic.startNotifications();
         stateCharacteristic.addEventListener('characteristicvaluechanged', onStateChanged);
 
-        document.getElementById('connStatus').innerHTML = '🟢 <span style="color:#10b981;">Connecté au moniteur</span>';
-        document.getElementById('btnConnect').innerText = 'Déconnecter';
+        document.getElementById('connStatus').innerHTML = '🟢 <span style="color:#10b981;">Connected to Monitor</span>';
+        document.getElementById('btnConnect').innerText = 'Disconnect';
         document.getElementById('btnConnect').className = 'btn btn-danger';
         silenceAlarm();
 
       } catch (err) {
         console.error(err);
-        document.getElementById('connStatus').innerText = 'Échec: ' + err.message;
+        document.getElementById('connStatus').innerText = 'Failed: ' + err.message;
       }
     }
 
     function onDisconnected() {
-      document.getElementById('connStatus').innerHTML = '🔴 <span style="color:#ef4444;">Déconnecté</span>';
-      document.getElementById('btnConnect').innerText = '🔗 Reconnecter';
+      document.getElementById('connStatus').innerHTML = '🔴 <span style="color:#ef4444;">Disconnected</span>';
+      document.getElementById('btnConnect').innerText = '🔗 Reconnect';
       document.getElementById('btnConnect').className = 'btn';
-      triggerAlarm("🚨 ALERTE CRITIQUE : Connexion perdue avec le moniteur patient !");
+      triggerAlarm("🚨 CRITICAL ALARM: Lost connection to patient monitor!");
     }
 
     function onStateChanged(event) {
@@ -275,7 +275,7 @@
       }
 
       const durationSec = Math.round((now - stateStartTime) / 1000);
-      document.getElementById('stateDuration').innerText = `Durée dans cet état : ${durationSec} s`;
+      document.getElementById('stateDuration').innerText = `Duration in this state: ${durationSec} s`;
 
       const box = document.getElementById('stateBox');
       const label = document.getElementById('stateLabel');
@@ -283,24 +283,24 @@
 
       if (newState === 'calm_breathing') {
         box.classList.add('state-calm');
-        label.innerText = '🟢 RESPIRATION CALME';
+        label.innerText = '🟢 CALM BREATHING';
       } else if (newState === 'fast_breathing') {
         box.classList.add('state-fast');
-        label.innerText = '🔴 RESPIRATION RAPIDE (TACHYPNÉE)';
+        label.innerText = '🔴 FAST BREATHING (TACHYPNEA)';
         const limit = parseInt(document.getElementById('limitFast').value) || 8;
         if (durationSec >= limit) {
-          triggerAlarm(`⚠️ ALERTE TACHYPNÉE : Respiration rapide prolongée (> ${limit} s) !`);
+          triggerAlarm(`⚠️ TACHYPNEA ALARM: Prolonged fast breathing (> ${limit} s)!`);
         }
       } else if (newState === 'not_attached') {
         box.classList.add('state-detached');
-        label.innerText = '🔵 NON ATTACHÉ (EN MAIN / POSÉ)';
+        label.innerText = '🔵 NOT ATTACHED (HAND / RESTING)';
         const limit = parseInt(document.getElementById('limitDetached').value) || 10;
         if (durationSec >= limit) {
-          triggerAlarm(`⚠️ ALERTE PATIENT : Capteur non attaché depuis plus de ${limit} s !`);
+          triggerAlarm(`⚠️ SENSOR DETACHED: Sensor has been off the chest for more than ${limit} s!`);
         }
       } else if (newState === 'shaking') {
         box.classList.add('state-shaking');
-        label.innerText = '🟣 SECOUEMENT DÉTECTÉ';
+        label.innerText = '🟣 SHAKING DETECTED';
       }
     }
 

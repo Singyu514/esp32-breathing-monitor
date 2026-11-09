@@ -46,8 +46,12 @@ The device autonomously classifies 4 distinct physical and respiratory states di
 | **SDA** | `GPIO 8` *(default)* | I2C Data |
 | **AD0** | `GND` | I2C address selection (`0x68`) |
 
-> *Photo of the wiring will be placed here: `docs/wiring.jpg`.*
+### Actual Hardware Wiring
 
+![ESP32-S3 connected to MPU-6050 on a breadboard](docs/wiring.jpg)
+
+*Figure 1. ESP32-S3 N16R8 connected to the MPU-6050
+IMU via I2C, powered through USB.*
 ---
 
 ## 📊 Project Progress & Grading Milestones

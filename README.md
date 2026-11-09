@@ -56,10 +56,10 @@ The device autonomously classifies 4 distinct physical and respiratory states di
   - [x] Git repository created on branch `main`
   - [x] README and structure initialized
   - [ ] Shared with teacher (`tomasvicar`)
-- [ ] **Part 1: Movement vs. Shaking (2.5 pts)**
-  - [ ] Data recording & labelling (hand movement vs shaking)
-  - [ ] Feature extraction and model training
-  - [ ] On-board C++ inference and RGB LED feedback (Blue vs Magenta)
+- [x] **Part 1: Movement vs. Shaking (2.5 pts)** - *Validated by teacher*
+  - [x] Omnidirectional sensor reading over I2C (SDA: 8, SCL: 9) at 50 Hz
+  - [x] Rolling window differential energy metric (`d_acc + 0.5 * d_gyr`)
+  - [x] Real-time RGB LED feedback (Blue = Slow movement / Still, Magenta = Shaking)
 - [ ] **Part 2: Breathing Classification (2.5 pts)**
   - [ ] Data collection on chest: calm breathing, fast breathing, not attached
   - [ ] 4-class classifier training & validation (confusion matrix)

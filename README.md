@@ -71,9 +71,11 @@ The device autonomously classifies 4 distinct physical and respiratory states di
   - [x] Real-time state timeline visualization
   - [x] Configurable duration alarms (Tachypnea > 8s, Detached > 10s) with audio beeper
   - [x] Instantaneous connection-lost alarm with critical siren
-- [ ] **Part 4: Web Page from the Board (1.0 pt)**
-  - [ ] ESP32-S3 Wi-Fi SoftAP / Web Server
-  - [ ] Live sensor waveform display & class probability distribution
+- [x] **Part 4: Web Page from the Board (1.0 pt)** - *Ready to show*
+  - [x] ESP32-S3 Wi-Fi SoftAP hotspot (`ESP32_Breathing_Monitor`)
+  - [x] Standalone HTTP web server running on chip (`http://192.168.4.1`)
+  - [x] Live acceleration signal waveform oscilloscope (pure Canvas, zero external dependencies)
+  - [x] Real-time prediction state badge and all 4 class probability confidence bars
 - [ ] **Part 5: Own Extension (1.5 pts)**
   - [ ] Definition & implementation of custom enhancement (e.g., dynamic breathing rate estimation / posture & apnea alerts / fallback uncertainty detection)
 - [ ] **Part 6: Documentation & Reproducibility (1.0 pt)**

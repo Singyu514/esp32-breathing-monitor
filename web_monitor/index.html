@@ -1,0 +1,412 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+  </style>
+</head>
+<body>
+<p class="p1"><br></p>
+<p class="p2">&lt;!DOCTYPE html&gt;</p>
+<p class="p2">&lt;html lang="en"&gt;</p>
+<p class="p2">&lt;head&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;title&gt;ESP32 Breathing Monitor&lt;/title&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>:root {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--bg: #0b1220;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--panel: #172235;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--text: #eef4ff;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--muted: #9aabc3;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--green: #35d399;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--red: #ff5964;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--blue: #58a6ff;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>--magenta: #d88aff;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>* { box-sizing: border-box; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>body {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>margin: 0;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: var(--bg);</p>
+<p class="p2"><span class="Apple-converted-space">      </span>color: var(--text);</p>
+<p class="p2"><span class="Apple-converted-space">      </span>font-family: system-ui, -apple-system, sans-serif;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>main { max-width: 900px; margin: auto; padding: 24px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>header {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>justify-content: space-between;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>gap: 15px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>flex-wrap: wrap;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>h1 { margin-bottom: 4px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>p, small { color: var(--muted); }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.panel {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: var(--panel);</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border: 1px solid #283750;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 16px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>padding: 22px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>margin-top: 20px;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.state {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>padding: 45px 15px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 14px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #101b2d;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.state h2 { font-size: clamp(28px, 5vw, 42px); }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.indicator {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>width: 22px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>height: 22px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #64748b;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 50%;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>display: inline-block;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>button {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #2563eb;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>color: white;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border: 0;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 9px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>padding: 12px 18px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>cursor: pointer;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>font-weight: 600;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>margin: 4px;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>button:hover { filter: brightness(1.15); }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>button:disabled { opacity: .5; cursor: not-allowed; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.secondary { background: #34445e; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.timeline {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>height: 34px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 8px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>overflow: hidden;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #334155;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.segment { min-width: 2px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.legend { display: flex; gap: 15px; flex-wrap: wrap; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.legend span { font-size: 13px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.alarms { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.alarm {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>padding: 17px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 10px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #233047;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border: 1px solid #35445d;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.alarm.active {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #63222c;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-color: var(--red);</p>
+<p class="p2"><span class="Apple-converted-space">      </span>animation: flash 1s infinite alternate;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>@keyframes flash { to { background: #922c39; } }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>input {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>width: 65px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>background: #101b2d;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>color: white;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>padding: 7px;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border: 1px solid #52617b;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>border-radius: 5px;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span>#log { max-height: 180px; overflow: auto; font-size: 13px; }</p>
+<p class="p2"><span class="Apple-converted-space">    </span>.log-entry { border-bottom: 1px solid #34445e; padding: 7px 0; }</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p2">&lt;/head&gt;</p>
+<p class="p2">&lt;body&gt;</p>
+<p class="p2">&lt;main&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;header&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;h1&gt;Breathing Monitor&lt;/h1&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;p&gt;ESP32-S3 · MPU-6050 · Real-time AI&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;span id="connection"&gt;● Disconnected&lt;/span&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;button id="connectBtn"&gt;Connect BLE&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;button id="disconnectBtn" class="secondary"&gt;Disconnect&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/header&gt;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;section class="panel"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div class="state"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;span class="indicator" id="indicator"&gt;&lt;/span&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;h2 id="stateName"&gt;WAITING FOR DATA&lt;/h2&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;p id="stateDuration"&gt;No active state&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;small id="modeLabel"&gt;Mode: Live BLE&lt;/small&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/section&gt;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;section class="panel"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;h3&gt;State Timeline&lt;/h3&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;p&gt;Recent 120 seconds&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div class="timeline" id="timeline"&gt;&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;br&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div class="legend"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;span style="color:#35d399"&gt;● Calm&lt;/span&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;span style="color:#ff5964"&gt;● Fast&lt;/span&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;span style="color:#58a6ff"&gt;● Not Attached&lt;/span&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;span style="color:#d88aff"&gt;● Shaking&lt;/span&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/section&gt;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;section class="panel"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;h3&gt;Alarm Configuration&lt;/h3&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>Fast breathing:</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;input type="number" id="fastLimit" value="10" min="1"&gt; seconds</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>Not attached:</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;input type="number" id="offLimit" value="15" min="1"&gt; seconds</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/p&gt;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div class="alarms"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;div class="alarm" id="fastAlarm"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span>&lt;strong&gt;Fast Breathing&lt;/strong&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span>&lt;p id="fastMessage"&gt;Normal&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;div class="alarm" id="offAlarm"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span>&lt;strong&gt;Not Attached&lt;/strong&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span>&lt;p id="offMessage"&gt;Normal&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;div class="alarm" id="connectionAlarm"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span>&lt;strong&gt;Connection Lost&lt;/strong&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span>&lt;p id="connectionMessage"&gt;Awaiting first connection&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/section&gt;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;section class="panel"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;h3&gt;Demo Mode&lt;/h3&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;p&gt;Test the dashboard without ESP32 Bluetooth.&lt;/p&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;button class="secondary" onclick="demo('CALM')"&gt;Calm&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;button class="secondary" onclick="demo('FAST')"&gt;Fast&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;button class="secondary" onclick="demo('NOT_ATTACHED')"&gt;Not Attached&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;button class="secondary" onclick="demo('SHAKING')"&gt;Shaking&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;button class="secondary" onclick="stopDemo()"&gt;Stop Demo&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/section&gt;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;section class="panel"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;h3&gt;Event Log&lt;/h3&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>&lt;div id="log"&gt;&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>&lt;/section&gt;</p>
+<p class="p2">&lt;/main&gt;</p>
+<p class="p1"><br></p>
+<p class="p2">&lt;script&gt;</p>
+<p class="p2">const SERVICE_UUID = "f0a00001-7c5a-4a26-9e3d-6c82f0a19b21";</p>
+<p class="p2">const STATE_UUID = "f0a00002-7c5a-4a26-9e3d-6c82f0a19b21";</p>
+<p class="p1"><br></p>
+<p class="p2">const STATES = {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>CALM: { name: "CALM BREATHING", color: "#35d399" },</p>
+<p class="p2"><span class="Apple-converted-space">  </span>FAST: { name: "FAST BREATHING", color: "#ff5964" },</p>
+<p class="p2"><span class="Apple-converted-space">  </span>NOT_ATTACHED: { name: "NOT ATTACHED", color: "#58a6ff" },</p>
+<p class="p2"><span class="Apple-converted-space">  </span>SHAKING: { name: "SHAKING", color: "#d88aff" }</p>
+<p class="p2">};</p>
+<p class="p1"><br></p>
+<p class="p2">let device = null;</p>
+<p class="p2">let characteristic = null;</p>
+<p class="p2">let currentState = null;</p>
+<p class="p2">let stateSince = null;</p>
+<p class="p2">let history = [];</p>
+<p class="p2">let mode = "live";</p>
+<p class="p2">let connectedOnce = false;</p>
+<p class="p2">let unexpectedDisconnect = false;</p>
+<p class="p1"><br></p>
+<p class="p2">const el = id =&gt; document.getElementById(id);</p>
+<p class="p1"><br></p>
+<p class="p2">function log(message) {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const row = document.createElement("div");</p>
+<p class="p2"><span class="Apple-converted-space">  </span>row.className = "log-entry";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>row.textContent = new Date().toLocaleTimeString() + " — " + message;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("log").prepend(row);</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function setState(raw) {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const state = raw.trim().toUpperCase();</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (!STATES[state]) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>log("Unknown state received: " + raw);</p>
+<p class="p2"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (state !== currentState) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>currentState = state;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>stateSince = Date.now();</p>
+<p class="p2"><span class="Apple-converted-space">    </span>log("State changed: " + STATES[state].name);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>const info = STATES[state];</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("stateName").textContent = info.name;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("stateName").style.color = info.color;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("indicator").style.background = info.color;</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function onNotification(event) {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (mode !== "live") return;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const value = event.target.value;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const bytes = new Uint8Array(</p>
+<p class="p2"><span class="Apple-converted-space">    </span>value.buffer, value.byteOffset, value.byteLength</p>
+<p class="p2"><span class="Apple-converted-space">  </span>);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const state = new TextDecoder("utf-8").decode(bytes);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>setState(state);</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">async function connectBLE() {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (!navigator.bluetooth) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>alert("Web Bluetooth unavailable. Use Chrome on macOS, Windows or Android over HTTPS.");</p>
+<p class="p2"><span class="Apple-converted-space">    </span>return;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>try {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>mode = "live";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>el("modeLabel").textContent = "Mode: Live BLE";</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>device = await navigator.bluetooth.requestDevice({</p>
+<p class="p2"><span class="Apple-converted-space">      </span>filters: [{ services: [SERVICE_UUID] }],</p>
+<p class="p2"><span class="Apple-converted-space">      </span>optionalServices: [SERVICE_UUID]</p>
+<p class="p2"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>device.addEventListener("gattserverdisconnected", onDisconnect);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>const server = await device.gatt.connect();</p>
+<p class="p2"><span class="Apple-converted-space">    </span>const service = await server.getPrimaryService(SERVICE_UUID);</p>
+<p class="p2"><span class="Apple-converted-space">    </span>characteristic = await service.getCharacteristic(STATE_UUID);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>await characteristic.startNotifications();</p>
+<p class="p2"><span class="Apple-converted-space">    </span>characteristic.addEventListener(</p>
+<p class="p2"><span class="Apple-converted-space">      </span>"characteristicvaluechanged", onNotification</p>
+<p class="p2"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>connectedOnce = true;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>unexpectedDisconnect = false;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>el("connection").textContent = "● Connected";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>el("connection").style.color = "#35d399";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>el("connectionMessage").textContent = "Connected";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>log("BLE connected");</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">    </span>try {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>const value = await characteristic.readValue();</p>
+<p class="p2"><span class="Apple-converted-space">      </span>onNotification({ target: { value } });</p>
+<p class="p2"><span class="Apple-converted-space">    </span>} catch (error) {</p>
+<p class="p2"><span class="Apple-converted-space">      </span>log("Waiting for first state notification");</p>
+<p class="p2"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span>} catch (error) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>log("BLE connection error: " + error.message);</p>
+<p class="p2"><span class="Apple-converted-space">    </span>el("connection").textContent = "● Disconnected";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function onDisconnect() {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (!connectedOnce) return;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("connection").textContent = "● Connection lost";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("connection").style.color = "#ff5964";</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (mode === "live") {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>unexpectedDisconnect = true;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>currentState = null;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>stateSince = null;</p>
+<p class="p2"><span class="Apple-converted-space">    </span>log("ALARM: BLE connection lost");</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function disconnectBLE() {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>unexpectedDisconnect = false;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (device &amp;&amp; device.gatt.connected) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>device.gatt.disconnect();</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span>currentState = null;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>stateSince = null;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("connection").textContent = "● Disconnected";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("connection").style.color = "#9aabc3";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>log("Disconnected by user");</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function demo(state) {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (device &amp;&amp; device.gatt.connected) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>disconnectBLE();</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><span class="Apple-converted-space">  </span>mode = "demo";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>unexpectedDisconnect = false;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("modeLabel").textContent = "Mode: DEMO — Simulated Data";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>setState(state);</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function stopDemo() {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>mode = "live";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>currentState = null;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>stateSince = null;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("modeLabel").textContent = "Mode: Live BLE";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("stateName").textContent = "WAITING FOR DATA";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("stateName").style.color = "#eef4ff";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("indicator").style.background = "#64748b";</p>
+<p class="p2"><span class="Apple-converted-space">  </span>log("Demo stopped");</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function setAlarm(id, messageId, active, message) {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el(id).classList.toggle("active", active);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>el(messageId).textContent = message;</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">function tick() {</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const now = Date.now();</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const seconds = stateSince</p>
+<p class="p2"><span class="Apple-converted-space">    </span>? Math.floor((now - stateSince) / 1000)</p>
+<p class="p2"><span class="Apple-converted-space">    </span>: 0;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>el("stateDuration").textContent = currentState</p>
+<p class="p2"><span class="Apple-converted-space">    </span>? "Current state: " + seconds + " seconds"</p>
+<p class="p2"><span class="Apple-converted-space">    </span>: "No active state";</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>const fastLimit = Math.max(1, Number(el("fastLimit").value) || 10);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const offLimit = Math.max(1, Number(el("offLimit").value) || 15);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>const fastActive = currentState === "FAST" &amp;&amp; seconds &gt;= fastLimit;</p>
+<p class="p2"><span class="Apple-converted-space">  </span>const offActive =</p>
+<p class="p2"><span class="Apple-converted-space">    </span>currentState === "NOT_ATTACHED" &amp;&amp; seconds &gt;= offLimit;</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>setAlarm(</p>
+<p class="p2"><span class="Apple-converted-space">    </span>"fastAlarm", "fastMessage", fastActive,</p>
+<p class="p2"><span class="Apple-converted-space">    </span>fastActive ? "ALARM: Fast breathing too long!" : "Normal"</p>
+<p class="p2"><span class="Apple-converted-space">  </span>);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>setAlarm(</p>
+<p class="p2"><span class="Apple-converted-space">    </span>"offAlarm", "offMessage", offActive,</p>
+<p class="p2"><span class="Apple-converted-space">    </span>offActive ? "ALARM: Sensor not attached!" : "Normal"</p>
+<p class="p2"><span class="Apple-converted-space">  </span>);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>setAlarm(</p>
+<p class="p2"><span class="Apple-converted-space">    </span>"connectionAlarm", "connectionMessage",</p>
+<p class="p2"><span class="Apple-converted-space">    </span>unexpectedDisconnect,</p>
+<p class="p2"><span class="Apple-converted-space">    </span>unexpectedDisconnect ? "ALARM: BLE connection lost!" :</p>
+<p class="p2"><span class="Apple-converted-space">    </span>(device &amp;&amp; device.gatt.connected ? "Connected" : "Not connected")</p>
+<p class="p2"><span class="Apple-converted-space">  </span>);</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>history.push(currentState);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>if (history.length &gt; 120) history.shift();</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>const timeline = el("timeline");</p>
+<p class="p2"><span class="Apple-converted-space">  </span>timeline.replaceChildren();</p>
+<p class="p1"><br></p>
+<p class="p2"><span class="Apple-converted-space">  </span>for (const state of history) {</p>
+<p class="p2"><span class="Apple-converted-space">    </span>const segment = document.createElement("div");</p>
+<p class="p2"><span class="Apple-converted-space">    </span>segment.className = "segment";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>segment.style.flex = "1";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>segment.style.background = STATES[state]?.color || "#334155";</p>
+<p class="p2"><span class="Apple-converted-space">    </span>timeline.appendChild(segment);</p>
+<p class="p2"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2">}</p>
+<p class="p1"><br></p>
+<p class="p2">el("connectBtn").addEventListener("click", connectBLE);</p>
+<p class="p2">el("disconnectBtn").addEventListener("click", disconnectBLE);</p>
+<p class="p1"><br></p>
+<p class="p2">setInterval(tick, 1000);</p>
+<p class="p2">log("Dashboard ready");</p>
+<p class="p2">&lt;/script&gt;</p>
+<p class="p2">&lt;/body&gt;</p>
+<p class="p2">&lt;/html&gt;</p>
+</body>
+</html>

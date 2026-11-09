@@ -233,10 +233,16 @@ def main():
         count = np.sum(y == idx)
         print(f"  Class {idx} ({name}): {count} windows")
 
-    # Honest split: split by recordings (groups)
-    unique_groups = len(np.unique(groups))
-    if unique_groups >= 2:
-        gss = GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=42)
+    # Split by session if s1 and s2 exist
+    s1_mask = np.array(["_s1_" in files[g] for g in groups])
+    s2_mask = np.array(["_s2_" in files[g] for g in groups])
+
+    if np.any(s1_mask) and np.any(s2_mask):
+        print("\n[INFO] Splitting by recorded sessions: Training on Session 1, Testing on Session 2...")
+        X_train, y_train = X[s1_mask], y[s1_mask]
+        X_test, y_test = X[s2_mask], y[s2_mask]
+    elif unique_groups >= 2:
+        gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
         train_idx, test_idx = next(gss.split(X, y, groups))
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
@@ -253,9 +259,10 @@ def main():
     print("\n" + "="*50)
     print("MODEL EVALUATION ON TEST SET (Honest session split):")
     print("="*50)
-    print(classification_report(y_test, y_pred, target_names=[CLASS_NAMES[i] for i in sorted(np.unique(y))], zero_division=0))
+    all_labels = [0, 1, 2, 3]
+    print(classification_report(y_test, y_pred, labels=all_labels, target_names=CLASS_NAMES, zero_division=0))
     print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred, labels=all_labels))
     print("="*50)
 
     # Re-train on all data before final export

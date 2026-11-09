@@ -47,6 +47,7 @@ int current_position = POS_BACK;
 int smoothed_position = POS_BACK;
 unsigned long position_start_time = 0;
 unsigned long last_sample_time = 0;
+const unsigned long SAMPLE_INTERVAL_MS = 20; // 50 Hz
 
 // Cumulative statistics (seconds in each position)
 unsigned long time_in_pos[5] = {0, 0, 0, 0, 0};

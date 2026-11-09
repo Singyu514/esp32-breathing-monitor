@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Station de Surveillance Respiratoire - ESP32-S3</title>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #151c2c;
+      --card-border: #232f48;
+      --text-color: #e2e8f0;
+      --text-muted: #94a3b8;
+      --color-calm: #10b981;      /* Vert */
+      --color-fast: #ef4444;      /* Rouge */
+      --color-detached: #3b82f6;  /* Bleu */
+      --color-shaking: #d946ef;   /* Magenta */
+      --color-alarm: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+    h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .badge { font-size: 0.8rem; padding: 0.2rem 0.6rem; border-radius: 9999px; background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; }
+
+    .btn { background: #2563eb; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn:hover { background: #1d4ed8; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .card-title { font-size: 1.1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* State display */
+    .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; border-radius: 12px; background: #0f172a; border: 2px solid var(--card-border); text-align: center; min-height: 180px; transition: all 0.3s ease; }
+    .state-name { font-size: 2.2rem; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .state-duration { font-size: 1.1rem; color: var(--text-muted); }
+
+    /* State colors */
+    .state-calm { border-color: var(--color-calm); box-shadow: 0 0 25px rgba(16, 185, 129, 0.25); color: var(--color-calm); }
+    .state-fast { border-color: var(--color-fast); box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); color: var(--color-fast); animation: pulse 1s infinite; }
+    .state-detached { border-color: var(--color-detached); box-shadow: 0 0 25px rgba(59, 130, 246, 0.25); color: var(--color-detached); }
+    .state-shaking { border-color: var(--color-shaking); box-shadow: 0 0 25px rgba(217, 70, 239, 0.3); color: var(--color-shaking); }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    /* Alarms banner */
+    .alarm-banner { display: none; padding: 1rem 1.5rem; border-radius: 8px; background: rgba(220, 38, 38, 0.2); border: 2px solid var(--color-alarm); color: #fca5a5; font-weight: 700; align-items: center; justify-content: space-between; animation: blink 0.8s infinite alternate; }
+    @keyframes blink { from { opacity: 0.7; } to { opacity: 1; } }
+
+    /* Timeline */
+    .timeline-container { height: 70px; background: #0f172a; border-radius: 8px; border: 1px solid var(--card-border); display: flex; overflow: hidden; align-items: stretch; margin-top: 0.5rem; }
+    .timeline-segment { height: 100%; transition: width 0.2s; position: relative; }
+    .timeline-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; font-size: 0.85rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    /* Limits setup */
+    .limits-box { display: flex; flex-direction: column; gap: 0.7rem; font-size: 0.9rem; background: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid var(--card-border); }
+    .limits-row { display: flex; justify-content: space-between; align-items: center; }
+    input[type=number] { width: 60px; background: #1e293b; border: 1px solid #334155; color: white; padding: 0.3rem 0.5rem; border-radius: 4px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>🫁 Moniteur de Surveillance Patient <span class="badge">ESP32-S3 BLE</span></h1>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">Laboratoire IA Temps Réel (MPA-PRM) - Sing-Yu Lin & Maxime Brière</p>
+    </div>
+    <div style="display: flex; gap: 0.8rem; align-items: center;">
+      <span id="connStatus" style="color: var(--text-muted); font-size: 0.9rem;">● Déconnecté</span>
+      <button id="btnConnect" class="btn" onclick="toggleConnect()">🔗 Connecter le moniteur</button>
+    </div>
+  </header>
+
+  <!-- Banner for Alarms -->
+  <div id="alarmBanner" class="alarm-banner">
+    <div style="display: flex; align-items: center; gap: 0.8rem;">
+      <span style="font-size: 1.5rem;">🚨</span>
+      <span id="alarmText">ALERTE DÉCLENCHÉE</span>
+    </div>
+    <button class="btn btn-danger" onclick="silenceAlarm()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Arrêter l'alarme sonore</button>
+  </div>
+
+  <div class="grid">
+    <!-- Card 1: Live State -->
+    <div class="card">
+      <div class="card-title">État Actuel du Patient</div>
+      <div id="stateBox" class="state-box">
+        <div id="stateLabel" class="state-name">EN ATTENTE</div>
+        <div id="stateDuration" class="state-duration">Connectez la carte en Bluetooth</div>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+        Fréquence de notification : temps réel via Bluetooth Low Energy (GATT)
+      </div>
+    </div>
+
+    <!-- Card 2: Alarm Limits & Settings -->
+    <div class="card">
+      <div class="card-title">Paramètres des Seuils d'Alarme (Clinique)</div>
+      <div class="limits-box">
+        <div class="limits-row">
+          <span>⚠️ <strong>Alarme Respiration Rapide (Tachypnée)</strong> :</span>
+          <div>
+            <input type="number" id="limitFast" value="8" min="3" max="60"> secondes
+          </div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+          Indique une détresse respiratoire ou crise d'hyperventilation persistante.
+        </div>
+        <hr style="border: 0; border-top: 1px solid var(--card-border);">
+        <div class="limits-row">
+          <span>⚠️ <strong>Alarme Capteur Détaché</strong> :</span>
+          <div>
+            <input type="number" id="limitDetached" value="10" min="3" max="60"> secondes
+          </div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+          Alerte si le capteur est retiré du thorax du patient plus de 10s.
+        </div>
+        <hr style="border: 0; border-top: 1px solid var(--card-border);">
+        <div class="limits-row">
+          <span>🚨 <strong>Alarme Perte de Connexion BLE</strong> :</span>
+          <span style="color: #ef4444; font-weight: 600;">Instantanée</span>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+          Alerte immédiate en cas de rupture du signal radio Bluetooth.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Timeline -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="card-title">Chronologie des États (Historique en direct)</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Défilement continu</span>
+    </div>
+
+    <div id="timeline" class="timeline-container"></div>
+
+    <div class="timeline-legend">
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-calm);"></div> Respiration Calme</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-fast);"></div> Respiration Rapide</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-detached);"></div> Non Attaché / En main</div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--color-shaking);"></div> Secouement</div>
+    </div>
+  </div>
+
+  <script>
+    // BLE UUIDs
+    const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+    const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+
+    let bluetoothDevice = null;
+    let stateCharacteristic = null;
+
+    let currentState = 'none';
+    let stateStartTime = Date.now();
+    let isAlarmActive = false;
+    let audioCtx = null;
+    let alarmOscillator = null;
+
+    const historyTimeline = []; // { state, duration }
+    const MAX_TIMELINE_ITEMS = 60;
+
+    // Web Audio Beeper for bedside alarms
+    function playAlarmTone() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (alarmOscillator) return;
+
+      alarmOscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      alarmOscillator.type = 'sawtooth';
+      alarmOscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz
+
+      // Beep cycle
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      alarmOscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      alarmOscillator.start();
+    }
+
+    function stopAlarmTone() {
+      if (alarmOscillator) {
+        alarmOscillator.stop();
+        alarmOscillator.disconnect();
+        alarmOscillator = null;
+      }
+    }
+
+    function triggerAlarm(message) {
+      isAlarmActive = true;
+      document.getElementById('alarmBanner').style.display = 'flex';
+      document.getElementById('alarmText').innerText = message;
+      playAlarmTone();
+    }
+
+    function silenceAlarm() {
+      stopAlarmTone();
+      document.getElementById('alarmBanner').style.display = 'none';
+    }
+
+    async function toggleConnect() {
+      if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+        bluetoothDevice.gatt.disconnect();
+        return;
+      }
+
+      try {
+        document.getElementById('connStatus').innerText = 'Recherche...';
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [SERVICE_UUID]
+        });
+
+        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+        document.getElementById('connStatus').innerText = 'Connexion GATT...';
+        const server = await bluetoothDevice.gatt.connect();
+
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        stateCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+        await stateCharacteristic.startNotifications();
+        stateCharacteristic.addEventListener('characteristicvaluechanged', onStateChanged);
+
+        document.getElementById('connStatus').innerHTML = '🟢 <span style="color:#10b981;">Connecté au moniteur</span>';
+        document.getElementById('btnConnect').innerText = 'Déconnecter';
+        document.getElementById('btnConnect').className = 'btn btn-danger';
+        silenceAlarm();
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('connStatus').innerText = 'Échec: ' + err.message;
+      }
+    }
+
+    function onDisconnected() {
+      document.getElementById('connStatus').innerHTML = '🔴 <span style="color:#ef4444;">Déconnecté</span>';
+      document.getElementById('btnConnect').innerText = '🔗 Reconnecter';
+      document.getElementById('btnConnect').className = 'btn';
+      triggerAlarm("🚨 ALERTE CRITIQUE : Connexion perdue avec le moniteur patient !");
+    }
+
+    function onStateChanged(event) {
+      const decoder = new TextDecoder('utf-8');
+      const newState = decoder.decode(event.target.value).trim();
+      updateState(newState);
+    }
+
+    function updateState(newState) {
+      const now = Date.now();
+      if (newState !== currentState) {
+        if (currentState !== 'none') {
+          historyTimeline.push({
+            state: currentState,
+            duration: Math.max(1, Math.round((now - stateStartTime) / 1000))
+          });
+          if (historyTimeline.length > MAX_TIMELINE_ITEMS) historyTimeline.shift();
+          renderTimeline();
+        }
+        currentState = newState;
+        stateStartTime = now;
+        silenceAlarm(); // reset previous duration alarms on state change
+      }
+
+      const durationSec = Math.round((now - stateStartTime) / 1000);
+      document.getElementById('stateDuration').innerText = `Durée dans cet état : ${durationSec} s`;
+
+      const box = document.getElementById('stateBox');
+      const label = document.getElementById('stateLabel');
+      box.className = 'state-box';
+
+      if (newState === 'calm_breathing') {
+        box.classList.add('state-calm');
+        label.innerText = '🟢 RESPIRATION CALME';
+      } else if (newState === 'fast_breathing') {
+        box.classList.add('state-fast');
+        label.innerText = '🔴 RESPIRATION RAPIDE (TACHYPNÉE)';
+        const limit = parseInt(document.getElementById('limitFast').value) || 8;
+        if (durationSec >= limit) {
+          triggerAlarm(`⚠️ ALERTE TACHYPNÉE : Respiration rapide prolongée (> ${limit} s) !`);
+        }
+      } else if (newState === 'not_attached') {
+        box.classList.add('state-detached');
+        label.innerText = '🔵 NON ATTACHÉ (EN MAIN / POSÉ)';
+        const limit = parseInt(document.getElementById('limitDetached').value) || 10;
+        if (durationSec >= limit) {
+          triggerAlarm(`⚠️ ALERTE PATIENT : Capteur non attaché depuis plus de ${limit} s !`);
+        }
+      } else if (newState === 'shaking') {
+        box.classList.add('state-shaking');
+        label.innerText = '🟣 SECOUEMENT DÉTECTÉ';
+      }
+    }
+
+    // Periodic tick to update duration and alarms even without new packet
+    setInterval(() => {
+      if (currentState !== 'none') {
+        updateState(currentState);
+      }
+    }, 1000);
+
+    function renderTimeline() {
+      const container = document.getElementById('timeline');
+      container.innerHTML = '';
+      const totalDur = historyTimeline.reduce((acc, cur) => acc + cur.duration, 0) || 1;
+
+      historyTimeline.forEach(item => {
+        const seg = document.createElement('div');
+        seg.className = 'timeline-segment';
+        seg.style.width = `${Math.max(3, (item.duration / totalDur) * 100)}%`;
+        if (item.state === 'calm_breathing') seg.style.background = 'var(--color-calm)';
+        else if (item.state === 'fast_breathing') seg.style.background = 'var(--color-fast)';
+        else if (item.state === 'not_attached') seg.style.background = 'var(--color-detached)';
+        else if (item.state === 'shaking') seg.style.background = 'var(--color-shaking)';
+        seg.title = `${item.state}: ${item.duration}s`;
+        container.appendChild(seg);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -46,7 +46,9 @@ The device autonomously classifies 4 distinct physical and respiratory states di
 | **SDA** | `GPIO 8` *(default)* | I2C Data |
 | **AD0** | `GND` | I2C address selection (`0x68`) |
 
-> Photo of the wiring will be placed here: `docs/wiring.jpg`.
+### Hardware Wiring Photo
+
+![ESP32-S3 and MPU-6050 Wiring](docs/wiring.jpg)
 ---
 
 ## 📊 Project Progress & Grading Milestones

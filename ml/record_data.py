@@ -57,7 +57,7 @@ def record_session(port, baudrate=115200, duration_sec=25):
         print(f"ERROR: Could not open {port}: {e}")
         return False
 
-    time.sleep(1.0)
+    time.sleep(1.5)
     ser.reset_input_buffer()
 
     print(f"\nTarget: {label.upper()}")

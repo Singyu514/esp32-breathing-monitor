@@ -134,10 +134,10 @@ void compute_features_and_classify() {
   float features[NUM_FEATURES];
   features[0] = log_acc_var;
   features[1] = acc_p2p;
-  features[2] = log_gyr_mean;
-  features[3] = (float)zero_crossings;
-  features[4] = mean_abs_diff;
-  features[5] = mean_acc;
+  features[2] = mean_gyr;
+  features[3] = log_gyr_mean;
+  features[4] = (float)zero_crossings;
+  features[5] = mean_abs_diff;
 
   // Run model inference
   float probs[NUM_CLASSES];

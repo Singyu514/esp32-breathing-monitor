@@ -21,10 +21,10 @@ STEP_SIZE = 50     # 1.0 second step (66% overlap)
 FEATURE_NAMES = [
     "log_acc_var",      # Log variance of acceleration norm
     "acc_p2p",          # Peak-to-peak amplitude (max - min)
+    "gyr_mean",         # Mean gyro magnitude (separates hand rotation vs constrained chest)
     "log_gyr_mean",     # Log mean of gyro magnitude
     "zero_crossings",   # Zero crossings of mean-centered acc norm (frequency indicator)
-    "mean_abs_diff",    # Mean absolute difference of successive acc norm samples
-    "acc_mean"          # Mean of acc norm (~1.0g)
+    "mean_abs_diff"     # Mean absolute difference of successive acc norm samples
 ]
 
 def extract_features(window_data):
@@ -53,7 +53,6 @@ def extract_features(window_data):
 
     # 3. Frequency proxy: zero crossings of mean-centered acc_norm
     centered = acc_norm - acc_mean
-    # Count sign changes
     zero_crossings = np.sum(np.diff(centered > 0) != 0)
 
     # 4. Successive differential energy
@@ -62,10 +61,10 @@ def extract_features(window_data):
     return [
         float(log_acc_var),
         float(acc_p2p),
+        float(gyr_mean),
         float(log_gyr_mean),
         float(zero_crossings),
-        float(mean_abs_diff),
-        float(acc_mean)
+        float(mean_abs_diff)
     ]
 
 def load_dataset():
@@ -233,31 +232,25 @@ def main():
         count = np.sum(y == idx)
         print(f"  Class {idx} ({name}): {count} windows")
 
-    # Split by session if s1 and s2 exist
-    s1_mask = np.array(["_s1_" in files[g] for g in groups])
-    s2_mask = np.array(["_s2_" in files[g] for g in groups])
+    # Stratified split: 1 session per class in test, 3 sessions per class in train
+    test_mask = np.zeros(len(X), dtype=bool)
+    for c_idx in range(len(CLASS_NAMES)):
+        class_file_indices = [i for i, f in enumerate(files) if CLASS_NAMES[c_idx] in f]
+        if class_file_indices:
+            # Pick the last file of this class for test
+            test_file_idx = class_file_indices[-1]
+            test_mask |= (groups == test_file_idx)
 
-    if np.any(s1_mask) and np.any(s2_mask):
-        print("\n[INFO] Splitting by recorded sessions: Training on Session 1, Testing on Session 2...")
-        X_train, y_train = X[s1_mask], y[s1_mask]
-        X_test, y_test = X[s2_mask], y[s2_mask]
-    elif unique_groups >= 2:
-        gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
-        train_idx, test_idx = next(gss.split(X, y, groups))
-        X_train, X_test = X[train_idx], X[test_idx]
-        y_train, y_test = y[train_idx], y[test_idx]
-    else:
-        print("Warning: Only 1 session file available. Evaluating on whole set.")
-        X_train, X_test = X, X
-        y_train, y_test = y, y
+    X_train, y_train = X[~test_mask], y[~test_mask]
+    X_test, y_test = X[test_mask], y[test_mask]
 
-    print(f"\nTraining Random Forest (5 shallow trees, max_depth=4)...")
-    clf = RandomForestClassifier(n_estimators=5, max_depth=4, class_weight='balanced', random_state=42)
+    print(f"\nTraining Random Forest (8 shallow trees, max_depth=5)...")
+    clf = RandomForestClassifier(n_estimators=8, max_depth=5, class_weight='balanced', random_state=42)
     clf.fit(X_train, y_train)
 
     y_pred = clf.predict(X_test)
     print("\n" + "="*50)
-    print("MODEL EVALUATION ON TEST SET (Honest session split):")
+    print("MODEL EVALUATION ON UNSEEN SESSIONS (Honest Test Set):")
     print("="*50)
     all_labels = [0, 1, 2, 3]
     print(classification_report(y_test, y_pred, labels=all_labels, target_names=CLASS_NAMES, zero_division=0))
@@ -265,9 +258,17 @@ def main():
     print(confusion_matrix(y_test, y_pred, labels=all_labels))
     print("="*50)
 
-    # Re-train on all data before final export
+    # Re-train on all 16 sessions before exporting to C
+    print("\nRetraining final model on full dataset (416 windows)...")
     clf.fit(X, y)
     export_forest_to_c(clf, OUTPUT_HEADER)
+
+    # Sync to Arduino sketchbook if present
+    arduino_dir = os.path.expanduser("~/OneDrive/Documents/Arduino/breathing_monitor")
+    if os.path.exists(arduino_dir):
+        import shutil
+        shutil.copy2(OUTPUT_HEADER, os.path.join(arduino_dir, "model.h"))
+        print(f"[OK] Synced model.h directly to Arduino sketchbook: {arduino_dir}")
 
 if __name__ == "__main__":
     main()

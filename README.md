@@ -65,11 +65,12 @@ The device autonomously classifies 4 distinct physical and respiratory states di
   - [x] Feature extraction: 6 spatial & dynamic IMU metrics with rotation awareness
   - [x] Embedded C++ Random Forest inference (8 trees, depth 5) + rolling majority smoothing filter
   - [x] Real-time RGB LED feedback: Green (calm), Red (fast), Blue (not attached), Magenta (shaking)
-- [ ] **Part 3: BLE Bedside Monitor (1.5 pts)**
-  - [ ] BLE GATT Service & State Characteristic notification on ESP32-S3
-  - [ ] Web Bluetooth monitoring dashboard on GitHub Pages
-  - [ ] Real-time state timeline visualization
-  - [ ] Duration alarms (prolonged fast breathing, prolonged detachment) & connection-lost alarm
+- [x] **Part 3: BLE Bedside Monitor (1.5 pts)** - *Ready & deployed*
+  - [x] BLE GATT Service & State Characteristic notification on ESP32-S3 (`ESP32_Breathing_Monitor`)
+  - [x] Web Bluetooth monitoring dashboard on GitHub Pages (full English clinical UI)
+  - [x] Real-time state timeline visualization
+  - [x] Configurable duration alarms (Tachypnea > 8s, Detached > 10s) with audio beeper
+  - [x] Instantaneous connection-lost alarm with critical siren
 - [ ] **Part 4: Web Page from the Board (1.0 pt)**
   - [ ] ESP32-S3 Wi-Fi SoftAP / Web Server
   - [ ] Live sensor waveform display & class probability distribution

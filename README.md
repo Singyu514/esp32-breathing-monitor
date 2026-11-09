@@ -48,7 +48,7 @@ The device autonomously classifies 4 distinct physical and respiratory states di
 
 ### Hardware Wiring Photo
 
-![ESP32-S3 and MPU-6050 Wiring](docs/wiring.jpg)
+<img src="docs/wiring.jpg" alt="ESP32-S3 and MPU-6050 Wiring" width="350">
 ---
 
 ## 📊 Project Progress & Grading Milestones
